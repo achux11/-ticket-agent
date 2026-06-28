@@ -82,8 +82,7 @@ def render():
                     st.markdown(f"🔗 [View on GitHub]({ticket['github_url']})")
 
                 if ticket["code_snippet"]:
-                    with st.expander("View code snippet"):
-                        st.code(ticket["code_snippet"], language="python")
+                    st.code(ticket["code_snippet"], language="python")
 
             with col_r:
                 new_status = st.selectbox(

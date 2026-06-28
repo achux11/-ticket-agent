@@ -3,9 +3,8 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-GITHUB_REPO = os.getenv("GITHUB_REPO")
+GITHUB_REPO = os.getenv("GITHUB_REPO", "achux11/-ticket-agent")
 
 def create_github_issue(title, body, severity):
     url = f"https://api.github.com/repos/{GITHUB_REPO}/issues"
