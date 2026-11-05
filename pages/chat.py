@@ -4,8 +4,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from utils.llm import analyze_code
-from utils.faiss_store import search_similar, add_ticket
-from utils.db import save_ticket, init_db
+from utils.faiss_store import search_similar, add_ticket, retrieve_ids
+from utils.db import save_ticket, init_db, get_tickets_by_ids
 from utils.github_api import create_github_issue, format_issue_body
 
 init_db()
@@ -58,9 +58,17 @@ def render():
             st.warning("Please paste some code first!")
             return
 
-        # Step 1 — Analyze code
+        # Step 1 — Retrieve similar past bugs and their fixes (RAG retrieval)
+        with st.spinner("📚 Retrieving similar past bugs..."):
+            past_fixes = get_tickets_by_ids(retrieve_ids(code, k=3))
+        if past_fixes:
+            with st.expander(f"📚 Using {len(past_fixes)} similar past bug(s) as context"):
+                for t in past_fixes:
+                    st.markdown(f"- **{t['title']}** ({t['severity']}): {t['suggested_fix']}")
+
+        # Step 2 — Analyze code, with the retrieved fixes added to the prompt
         with st.spinner("🤖 AI is analyzing your code for bugs..."):
-            result = analyze_code(code)
+            result = analyze_code(code, past_fixes)
 
         # Handle errors
         if "error" in result:

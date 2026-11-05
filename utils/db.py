@@ -71,3 +71,16 @@ def get_stats():
     resolved = c.fetchone()[0]
     conn.close()
     return {"total": total, "open": open_tickets, "critical": critical, "resolved": resolved}
+
+
+def get_tickets_by_ids(ticket_ids):
+    """Return stored tickets (including their suggested fixes) in the order of ticket_ids."""
+    if not ticket_ids:
+        return []
+    conn = get_conn()
+    c = conn.cursor()
+    marks = ",".join("?" for _ in ticket_ids)
+    c.execute(f"SELECT * FROM tickets WHERE id IN ({marks})", list(ticket_ids))
+    rows = {r["id"]: dict(r) for r in c.fetchall()}
+    conn.close()
+    return [rows[i] for i in ticket_ids if i in rows]

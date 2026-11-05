@@ -86,3 +86,12 @@ def search_similar(query, threshold=1.0):
             })
 
     return results
+
+def retrieve_ids(query, k=3):
+    """Return ticket ids of the k most similar past tickets, nearest first (retrieval step of RAG)."""
+    index = load_index()
+    meta = load_meta()
+    if index.ntotal == 0:
+        return []
+    distances, indices = index.search(get_embedding(query), min(k, index.ntotal))
+    return [meta[idx]["ticket_id"] for idx in indices[0] if idx != -1]

@@ -9,8 +9,23 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 API_URL = "https://router.huggingface.co/novita/v3/openai/chat/completions"
 MODEL = "meta-llama/llama-3.1-8b-instruct"
 
-def analyze_code(code):
-    prompt = (
+def format_past_fixes(past_fixes):
+    """Turn retrieved past tickets into a prompt section (the 'augmented' part of RAG)."""
+    if not past_fixes:
+        return ""
+    lines = ["Similar bugs found and fixed earlier in this project (use them as reference, "
+             "but only report bugs that are actually in the new code):"]
+    for i, t in enumerate(past_fixes, 1):
+        lines.append(
+            f"{i}. [{t.get('severity', '')}] {t.get('title', '')}\n"
+            f"   Problem: {t.get('description', '')}\n"
+            f"   Fix used: {t.get('suggested_fix', '')}"
+        )
+    return "\n".join(lines) + "\n\n"
+
+
+def build_prompt(code, past_fixes=None):
+    return (
         "You are an expert code reviewer and bug detector.\n\n"
         "Analyze the following code carefully and identify ALL bugs, errors, and issues.\n\n"
         "For each bug found, provide:\n"
@@ -20,6 +35,7 @@ def analyze_code(code):
         "4. Description of the bug\n"
         "5. The specific line or section with the bug\n"
         "6. A suggested fix\n\n"
+        + format_past_fixes(past_fixes) +
         "Return your response as a valid JSON object like this:\n"
         '{"bugs_found": true, "bug_count": 2, "bugs": [{"title": "Short title", '
         '"severity": "High", "category": "Logic Error", "description": "Detailed description", '
@@ -31,6 +47,10 @@ def analyze_code(code):
         "Code to analyze:\n"
         + code
     )
+
+
+def analyze_code(code, past_fixes=None):
+    prompt = build_prompt(code, past_fixes)
 
     headers = {
         "Authorization": f"Bearer {HF_TOKEN}",

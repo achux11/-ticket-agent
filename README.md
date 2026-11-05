@@ -11,7 +11,9 @@
 
 ## 🔄 Pipeline
 
-Code Input (Streamlit) → Bug Analysis (HuggingFace + llama-3.1-8b) → Duplicate Check (FAISS) → Local Storage (SQLite) → GitHub Issues API → Dashboard ✅
+Code Input (Streamlit) → Retrieve similar past bugs + fixes (FAISS + SQLite) → Bug Analysis with retrieved context (HuggingFace + llama-3.1-8b) → Duplicate Check (FAISS) → Local Storage (SQLite) → GitHub Issues API → Dashboard ✅
+
+**RAG step:** before the model sees new code, the agent embeds it, retrieves the 3 most similar past tickets from the FAISS index, looks up their fixes in SQLite, and adds them to the prompt. The model's suggested fixes are grounded in how this project fixed similar bugs before. The first run has no history, so it starts with the plain prompt.
 
 ---
 
@@ -21,7 +23,7 @@ Code Input (Streamlit) → Bug Analysis (HuggingFace + llama-3.1-8b) → Duplica
 |---|---|---|
 | UI | Streamlit | Web interface and dashboard |
 | LLM | HuggingFace + llama-3.1-8b | Bug detection and analysis |
-| Vector DB | FAISS | Semantic duplicate detection |
+| Vector DB | FAISS | Retrieval of past fixes (RAG) and duplicate detection |
 | Embeddings | sentence-transformers | Text to vectors |
 | Database | SQLite | Local ticket storage |
 | Ticket Platform | GitHub Issues API | Auto ticket creation |
